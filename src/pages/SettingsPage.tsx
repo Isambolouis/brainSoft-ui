@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   User,
   Phone,
@@ -15,7 +15,7 @@ import {
   Smartphone
 } from 'lucide-react';
 import { Button } from '../components/Button';
-import { Card, CardHeader } from '../components/Card';
+import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 import { Badge } from '../components/Badge';
 import { useUser } from '../context/UserContext';

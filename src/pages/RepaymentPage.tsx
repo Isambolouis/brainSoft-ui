@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   DollarSign,
@@ -11,7 +10,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { Button } from '../components/Button';
-import { Card, CardHeader } from '../components/Card';
+import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
 
 export function RepaymentPage() {
@@ -48,7 +47,7 @@ export function RepaymentPage() {
   const totalDue = 52750;
   const totalOverdue = 0;
 
-  const handleRepayment = (creditId: number) => {
+  const handleRepayment = (_creditId: number) => {
     // Simulate payment redirect to Mobile Money
     alert('Redirection vers Mobile Money pour le paiement...');
   };

@@ -1,14 +1,11 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   CreditCard,
   TrendingUp,
-  TrendingDown,
   DollarSign,
   Activity,
   Store,
   ChevronRight,
-  AlertCircle,
   BarChart3
 } from 'lucide-react';
 import { Button } from '../components/Button';

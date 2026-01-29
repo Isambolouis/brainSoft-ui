@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { 
+import {   
   Phone, 
   Mail, 
   User, 
   Building, 
   MapPin, 
   CheckCircle,
-  CreditCard,
   Camera
 } from 'lucide-react';
 import { Button } from '../components/Button';
-import { Card, CardHeader } from '../components/Card';
+import { Card } from '../components/Card';
 import { Input, Select } from '../components/Input';
 import { useUser } from '../context/UserContext';
 

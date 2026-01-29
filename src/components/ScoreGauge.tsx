@@ -1,19 +1,16 @@
-import React from 'react';
 
 interface ScoreGaugeProps {
   score: number;
   maxScore?: number;
   size?: 'sm' | 'md' | 'lg';
   showLabel?: boolean;
-  label?: string;
 }
 
 export function ScoreGauge({ 
   score, 
   maxScore = 1000, 
   size = 'md', 
-  showLabel = true,
-  label = 'Score de crédit'
+  showLabel = true
 }: ScoreGaugeProps) {
   const percentage = Math.min((score / maxScore) * 100, 100);
   
