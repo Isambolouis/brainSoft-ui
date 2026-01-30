@@ -56,6 +56,7 @@ export function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [activeMenu, setActiveMenu] = useState('Dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const filteredUsers = mockUsers.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -86,10 +87,47 @@ export function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-secondary flex">
+    <div className="min-h-screen bg-surface-secondary">
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-surface shadow-light fixed top-0 left-0 right-0 z-20 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold">R</span>
+            </div>
+            <span className="text-lg font-bold text-text-primary">RawFinance</span>
+          </div>
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-2 text-text-secondary hover:text-text-primary transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {sidebarOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-10"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-surface shadow-heavy fixed h-full z-10">
-        <div className="p-6 border-b border-gray-100">
+      <aside className={`
+        fixed top-0 left-0 h-full w-64 bg-surface shadow-heavy z-30
+        transform transition-transform duration-300 ease-in-out
+        lg:translate-x-0 lg:static lg:h-screen
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <div className="p-6 border-b border-gray-100 pt-16 lg:pt-6">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
               <span className="text-white font-bold">R</span>
@@ -103,7 +141,10 @@ export function AdminDashboard() {
             {menuItems.map((item) => (
               <li key={item.label}>
                 <button
-                  onClick={() => setActiveMenu(item.label)}
+                  onClick={() => {
+                    setActiveMenu(item.label);
+                    setSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                     item.label === activeMenu 
                       ? 'bg-primary/10 text-primary' 
@@ -129,20 +170,20 @@ export function AdminDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-64 p-8">
+      <main className="lg:ml-64 pt-16 lg:pt-8 p-4 lg:p-8">
         {/* Top Bar */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary">Dashboard Administration</h1>
-            <p className="text-text-secondary mt-1">Vue d'ensemble des performances</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-text-primary">Dashboard Administration</h1>
+            <p className="text-text-secondary text-sm mt-1">Vue d'ensemble des performances</p>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="relative">
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-none">
               <Input
                 placeholder="Rechercher..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-64"
+                className="pl-10 w-full sm:w-48 lg:w-64"
               />
               <svg className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -154,11 +195,11 @@ export function AdminDashboard() {
               </svg>
               <span className="absolute top-1 right-1 w-2 h-2 bg-danger rounded-full"></span>
             </button>
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                <span className="text-primary font-medium">AD</span>
+            <div className="flex items-center space-x-3 ml-auto sm:ml-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                <span className="text-primary font-medium text-sm">AD</span>
               </div>
-              <div>
+              <div className="hidden sm:block">
                 <p className="text-sm font-medium text-text-primary">Admin</p>
                 <p className="text-xs text-text-secondary">Super Admin</p>
               </div>
@@ -167,16 +208,16 @@ export function AdminDashboard() {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
           <Card className="bg-gradient-to-br from-primary to-primary-dark text-white">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white/80 text-sm">Total Prêté</p>
-                <p className="text-3xl font-bold mt-1">32.5M CDF</p>
-                <p className="text-white/80 text-sm mt-2">+12% ce mois</p>
+              <div className="flex-1">
+                <p className="text-white/80 text-xs sm:text-sm">Total Prêté</p>
+                <p className="text-xl sm:text-3xl font-bold mt-1">32.5M CDF</p>
+                <p className="text-white/80 text-xs sm:text-sm mt-1 sm:mt-2">+12% ce mois</p>
               </div>
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -185,28 +226,28 @@ export function AdminDashboard() {
 
           <Card className="bg-gradient-to-br from-secondary to-secondary-dark text-white">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white/80 text-sm">Taux de Remboursement</p>
-                <p className="text-3xl font-bold mt-1">94.2%</p>
-                <p className="text-white/80 text-sm mt-2">+2.1% ce mois</p>
+              <div className="flex-1">
+                <p className="text-white/80 text-xs sm:text-sm">Taux de Remboursement</p>
+                <p className="text-xl sm:text-3xl font-bold mt-1">94.2%</p>
+                <p className="text-white/80 text-xs sm:text-sm mt-1 sm:mt-2">+2.1% ce mois</p>
               </div>
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
           </Card>
 
-          <Card className="bg-gradient-to-br from-accent to-accent-dark text-white">
+          <Card className="bg-gradient-to-br from-accent to-accent-dark text-white sm:col-span-2 lg:col-span-1">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white/80 text-sm">Utilisateurs Actifs</p>
-                <p className="text-3xl font-bold mt-1">8,547</p>
-                <p className="text-white/80 text-sm mt-2">+156 cette semaine</p>
+              <div className="flex-1">
+                <p className="text-white/80 text-xs sm:text-sm">Utilisateurs Actifs</p>
+                <p className="text-xl sm:text-3xl font-bold mt-1">8,547</p>
+                <p className="text-white/80 text-xs sm:text-sm mt-1 sm:mt-2">+156 cette semaine</p>
               </div>
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
@@ -215,14 +256,14 @@ export function AdminDashboard() {
         </div>
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
           {/* Bar Chart */}
           <Card>
             <CardHeader 
               title="Montants des Crédits Accordés" 
               subtitle="Répartition mensuelle (en CDF)"
             />
-            <div className="h-64">
+            <div className="h-48 sm:h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
@@ -244,15 +285,15 @@ export function AdminDashboard() {
               title="Répartition par Genre" 
               subtitle="Distribution des utilisateurs"
             />
-            <div className="h-64">
+            <div className="h-48 sm:h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={genderData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
+                    innerRadius={40}
+                    outerRadius={70}
                     paddingAngle={5}
                     dataKey="value"
                   >
@@ -261,7 +302,7 @@ export function AdminDashboard() {
                     ))}
                   </Pie>
                   <Tooltip formatter={(value: number | undefined) => [`${value || 0}%`, 'Pourcentage']} />
-                  <Legend verticalAlign="bottom" height={36} />
+                  <Legend verticalAlign="bottom" height={36} iconSize={8} wrapperStyle={{ fontSize: '12px' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -270,41 +311,39 @@ export function AdminDashboard() {
 
         {/* User Management Table */}
         <Card>
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 lg:mb-6 gap-4">
             <CardHeader 
               title="Gestion des Utilisateurs" 
               subtitle="Historique des crédits et statuts"
             />
-            <div className="flex items-center space-x-3">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="input py-2 px-4 text-sm"
+                className="input py-2 px-3 text-sm flex-1 sm:flex-none"
               >
-                <option value="all">Tous les types</option>
+                <option value="all">Tous</option>
                 <option value="Particulier">Particuliers</option>
                 <option value="Entrepreneur">Entrepreneurs</option>
               </select>
-              <Button variant="secondary" size="sm">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <Button variant="secondary" size="sm" className="flex-1 sm:flex-none">
+                <svg className="w-4 h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Exporter
+                <span className="hidden sm:inline">Exporter</span>
               </Button>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <table className="w-full min-w-[600px]">
               <thead>
                 <tr className="bg-surface-secondary">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-text-secondary">Identité</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-text-secondary">Type</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-text-secondary">Montant</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-text-secondary">Date Prêt</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-text-secondary">Prochaine Échéance</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-text-secondary">Statut</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-text-secondary">Actions</th>
+                  <th className="text-left py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-text-secondary">Identité</th>
+                  <th className="text-left py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-text-secondary hidden sm:table-cell">Type</th>
+                  <th className="text-left py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-text-secondary">Montant</th>
+                  <th className="text-left py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-text-secondary hidden md:table-cell">Statut</th>
+                  <th className="text-left py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-text-secondary">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -313,35 +352,34 @@ export function AdminDashboard() {
                     key={user.id} 
                     className={`${index % 2 === 0 ? 'bg-surface' : 'bg-surface-secondary/50'} hover:bg-gray-50 transition-colors`}
                   >
-                    <td className="py-4 px-4">
+                    <td className="py-3 px-3 sm:px-4">
                       <div>
-                        <p className="font-medium text-text-primary">{user.name}</p>
-                        <p className="text-sm text-text-secondary">{user.phone}</p>
+                        <p className="font-medium text-text-primary text-sm">{user.name}</p>
+                        <p className="text-xs text-text-secondary sm:hidden">{user.type}</p>
+                        <p className="text-xs text-text-secondary hidden sm:block">{user.phone}</p>
                       </div>
                     </td>
-                    <td className="py-4 px-4">
+                    <td className="py-3 px-3 sm:px-4 hidden sm:table-cell">
                       <span className={`badge ${user.type === 'Entrepreneur' ? 'badge-info' : 'badge-primary/10 text-primary'}`}>
                         {user.type}
                       </span>
                     </td>
-                    <td className="py-4 px-4 font-medium">{formatCurrency(user.amount)}</td>
-                    <td className="py-4 px-4 text-text-secondary">{user.date}</td>
-                    <td className="py-4 px-4 text-text-secondary">{user.nextDue}</td>
-                    <td className="py-4 px-4">{getStatusBadge(user.status)}</td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center space-x-2">
-                        <button className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Voir dossier">
+                    <td className="py-3 px-3 sm:px-4 font-medium text-sm">{formatCurrency(user.amount)}</td>
+                    <td className="py-3 px-3 sm:px-4 hidden md:table-cell">{getStatusBadge(user.status)}</td>
+                    <td className="py-3 px-3 sm:px-4">
+                      <div className="flex items-center space-x-1">
+                        <button className="p-1.5 sm:p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Voir dossier">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
                         </button>
-                        <button className="p-2 text-text-secondary hover:text-primary hover:bg-gray-100 rounded-lg transition-colors" title="Contacter">
+                        <button className="p-1.5 sm:p-2 text-text-secondary hover:text-primary hover:bg-gray-100 rounded-lg transition-colors" title="Contacter">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                           </svg>
                         </button>
-                        <button className="p-2 text-text-secondary hover:text-secondary hover:bg-secondary/10 rounded-lg transition-colors" title="Ajuster limite">
+                        <button className="p-1.5 sm:p-2 text-text-secondary hover:text-secondary hover:bg-secondary/10 rounded-lg transition-colors" title="Ajuster limite">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                           </svg>
@@ -355,14 +393,24 @@ export function AdminDashboard() {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
-            <p className="text-sm text-text-secondary">
-              Affichage de <span className="font-medium">{filteredUsers.length}</span> sur <span className="font-medium">{mockUsers.length}</span> résultats
+          <div className="flex flex-col sm:flex-row items-center justify-between mt-4 pt-4 border-t border-gray-100 gap-4">
+            <p className="text-xs sm:text-sm text-text-secondary">
+              <span className="font-medium">{filteredUsers.length}</span> sur <span className="font-medium">{mockUsers.length}</span> résultats
             </p>
             <div className="flex items-center space-x-2">
-              <Button variant="secondary" size="sm" disabled>Précédent</Button>
-              <button className="px-3 py-1 bg-primary text-white rounded-lg text-sm">1</button>
-              <Button variant="secondary" size="sm">Suivant</Button>
+              <Button variant="secondary" size="sm" disabled className="px-2 sm:px-3">
+                <span className="hidden sm:inline">Précédent</span>
+                <svg className="w-4 h-4 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </Button>
+              <button className="px-2 sm:px-3 py-1 bg-primary text-white rounded-lg text-xs sm:text-sm">1</button>
+              <Button variant="secondary" size="sm" className="px-2 sm:px-3">
+                <span className="hidden sm:inline">Suivant</span>
+                <svg className="w-4 h-4 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Button>
             </div>
           </div>
         </Card>
