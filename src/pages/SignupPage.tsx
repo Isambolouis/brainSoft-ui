@@ -17,12 +17,24 @@ import { useUser } from '../context/UserContext';
 
 type Step = 'phone' | 'identification' | 'profile' | 'mobile-money' | 'confirmation';
 
+interface ImportMetaEnv {
+  readonly VITE_API_URL: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
 export function SignupPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { login, updateUser } = useUser();
-  
+
   const [currentStep, setCurrentStep] = useState<Step>('phone');
+  const [isLoading, setIsLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     phone: '',
     email: '',

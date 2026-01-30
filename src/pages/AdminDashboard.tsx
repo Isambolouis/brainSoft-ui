@@ -1,456 +1,507 @@
-import { useState } from 'react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
+import React, { useState, useEffect } from 'react';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  PieChart, Pie, Cell, LineChart, Line, Area, AreaChart
 } from 'recharts';
-import { Card, CardHeader } from '../components/Card';
+import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 
-// Mock data for charts
+// Mock data
 const monthlyData = [
-  { name: 'Jan', amount: 4500000 },
-  { name: 'Fév', amount: 5200000 },
-  { name: 'Mar', amount: 4800000 },
-  { name: 'Avr', amount: 6100000 },
-  { name: 'Mai', amount: 5500000 },
-  { name: 'Juin', amount: 6700000 },
+  { name: 'Jan', credits: 45, repayments: 32 },
+  { name: 'Fév', credits: 52, repayments: 41 },
+  { name: 'Mar', credits: 48, repayments: 45 },
+  { name: 'Avr', credits: 61, repayments: 52 },
+  { name: 'Mai', credits: 55, repayments: 48 },
+  { name: 'Juin', credits: 67, repayments: 58 },
+  { name: 'Juil', credits: 72, repayments: 65 },
 ];
 
-const genderData = [
-  { name: 'Particuliers', value: 65 },
-  { name: 'Entrepreneurs', value: 35 },
+const portfolioData = [
+  { name: 'Particuliers', value: 45, color: '#0066CC' },
+  { name: 'Entrepreneurs', value: 35, color: '#00B8A9' },
+  { name: 'Micro-entreprises', value: 20, color: '#FFB81C' },
 ];
 
-const COLORS = ['#0066CC', '#00B8A9', '#FFB81C'];
-
-// Mock users data
-const mockUsers = [
-  { id: 1, name: 'Jean Dupont', type: 'Particulier', phone: '+243 81 123 4567', amount: 500000, date: '2026-01-15', status: 'À jour', nextDue: '2026-02-15' },
-  { id: 2, name: 'Marie Kapinga', type: 'Entrepreneur', phone: '+243 89 234 5678', amount: 2500000, date: '2026-01-20', status: 'En retard', nextDue: '2026-01-20' },
-  { id: 3, name: 'Pierre Mweze', type: 'Particulier', phone: '+243 97 345 6789', amount: 300000, date: '2026-01-10', status: 'À jour', nextDue: '2026-02-10' },
-  { id: 4, name: 'Sophie Ngalula', type: 'Entrepreneur', phone: '+243 85 456 7890', amount: 1800000, date: '2026-01-22', status: 'À jour', nextDue: '2026-02-22' },
-  { id: 5, name: 'Thomas Bemba', type: 'Particulier', phone: '+243 84 567 8901', amount: 750000, date: '2026-01-18', status: 'Défaut', nextDue: '2026-01-18' },
-  { id: 6, name: 'Claire Wemba', type: 'Entrepreneur', phone: '+243 82 678 9012', amount: 3200000, date: '2026-01-25', status: 'À jour', nextDue: '2026-02-25' },
+const riskDistribution = [
+  { name: 'Faible risque', value: 60, color: '#00B8A9' },
+  { name: 'Risque moyen', value: 30, color: '#FFB81C' },
+  { name: 'Haut risque', value: 10, color: '#E53E3E' },
 ];
 
-const menuItems = [
-  { icon: '📊', label: 'Dashboard' },
-  { icon: '👥', label: 'Utilisateurs' },
-  { icon: '💰', label: 'Crédits' },
-  { icon: '📈', label: 'Analytics' },
-  { icon: '⚙️', label: 'Paramètres' },
+const recentActivity = [
+  { id: 1, user: 'Marie Dupont', action: 'Demande de crédit approuvée', amount: '5,000€', time: 'Il y a 2 min', type: 'success' },
+  { id: 2, user: 'Thomas Martin', action: 'Nouveau dossier soumis', amount: '12,000€', time: 'Il y a 5 min', type: 'info' },
+  { id: 3, user: 'Sophie Bernard', action: 'Remboursement reçu', amount: '850€', time: 'Il y a 12 min', type: 'success' },
+  { id: 4, user: 'Lucas Petit', action: 'Demande rejetée', amount: '3,000€', time: 'Il y a 25 min', type: 'error' },
+  { id: 5, user: 'Emma Robert', action: 'Relance de paiement', amount: '420€', time: 'Il y a 1h', type: 'warning' },
+];
+
+const users = [
+  { id: 1, name: 'Marie Dupont', email: 'marie@email.com', status: 'Actif', credit: '5,000€', score: 85, date: '15/01/2024' },
+  { id: 2, name: 'Thomas Martin', email: 'thomas@email.com', status: 'En attente', credit: '12,000€', score: 72, date: '16/01/2024' },
+  { id: 3, name: 'Sophie Bernard', email: 'sophie@email.com', status: 'Actif', credit: '8,500€', score: 91, date: '14/01/2024' },
+  { id: 4, name: 'Lucas Petit', email: 'lucas@email.com', status: 'Refusé', credit: '3,000€', score: 45, date: '17/01/2024' },
+  { id: 5, name: 'Emma Robert', email: 'emma@email.com', status: 'Actif', credit: '15,000€', score: 88, date: '13/01/2024' },
+  { id: 6, name: 'Antoine Durand', email: 'antoine@email.com', status: 'Actif', credit: '6,200€', score: 76, date: '12/01/2024' },
+  { id: 7, name: 'Julie Moreau', email: 'julie@email.com', status: 'En attente', credit: '9,000€', score: 68, date: '18/01/2024' },
 ];
 
 export function AdminDashboard() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
-  const [activeMenu, setActiveMenu] = useState('Dashboard');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [notificationCount, setNotificationCount] = useState(3);
 
-  const filteredUsers = mockUsers.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.phone.includes(searchTerm);
-    const matchesType = filterType === 'all' || user.type === filterType;
-    return matchesSearch && matchesType;
-  });
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-  const getStatusBadge = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'À jour':
-        return <span className="badge badge-success">À jour</span>;
-      case 'En retard':
-        return <span className="badge badge-warning">En retard</span>;
-      case 'Défaut':
-        return <span className="badge badge-danger">Défaut</span>;
-      default:
-        return <span className="badge badge-info">{status}</span>;
+      case 'Actif': return 'bg-success/10 text-success';
+      case 'En attente': return 'bg-warning/10 text-warning';
+      case 'Refusé': return 'bg-error/10 text-error';
+      default: return 'bg-gray-100 text-gray-600';
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-CD', {
-      style: 'currency',
-      currency: 'CDF',
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const filteredUsers = users.filter(user => 
+    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const sidebarItems = [
+    { icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', label: 'Dashboard', active: true },
+    { icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', label: 'Utilisateurs', badge: '124' },
+    { icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', label: 'Demandes de crédit', badge: '8' },
+    { icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', label: 'Transactions', badge: '156' },
+    { icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', label: 'Rapports', badge: '3' },
+    { icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z', label: 'Paramètres', badge: null },
+  ];
 
   return (
-    <div className="min-h-screen bg-surface-secondary">
-      {/* Mobile Header */}
-      <div className="lg:hidden bg-surface shadow-light fixed top-0 left-0 right-0 z-20 px-4 py-3">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-surface-secondary flex">
+      {/* Sidebar */}
+      <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-surface border-r border-gray-100 transition-all duration-300 flex flex-col fixed h-full z-20`}>
+        {/* Logo */}
+        <div className="p-4 border-b border-gray-100">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold">R</span>
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center shadow-lg shadow-primary/25 flex-shrink-0">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
             </div>
-            <span className="text-lg font-bold text-text-primary">RawFinance</span>
+            {sidebarOpen && (
+              <div className="animate-fade-in">
+                <span className="text-lg font-bold text-text-primary">RawFinance</span>
+                <p className="text-xs text-text-secondary">Admin Dashboard</p>
+              </div>
+            )}
           </div>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 text-text-secondary hover:text-text-primary transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {sidebarOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          {sidebarItems.map((item, index) => (
+            <a
+              key={index}
+              href="#"
+              className={`flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group ${
+                item.active 
+                  ? 'bg-primary/10 text-primary' 
+                  : 'text-text-secondary hover:bg-gray-50 hover:text-text-primary'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <svg className={`w-5 h-5 ${item.active ? 'text-primary' : 'text-gray-400 group-hover:text-text-primary'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                </svg>
+                {sidebarOpen && (
+                  <span className="font-medium text-sm animate-fade-in">{item.label}</span>
+                )}
+              </div>
+              {sidebarOpen && item.badge && (
+                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                  item.active ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {item.badge}
+                </span>
               )}
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Overlay */}
-      {sidebarOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-10"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Desktop Fixed Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 bg-surface shadow-heavy fixed top-0 left-0 h-screen z-10">
-        <div className="p-6 border-b border-gray-100 pt-6">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold">R</span>
-            </div>
-            <span className="text-lg font-bold text-text-primary">RawFinance</span>
-          </div>
-        </div>
-        
-        <nav className="p-4 flex-1 overflow-y-auto">
-          <ul className="space-y-2">
-            {menuItems.map((item) => (
-              <li key={item.label}>
-                <button
-                  onClick={() => setActiveMenu(item.label)}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                    item.label === activeMenu 
-                      ? 'bg-primary/10 text-primary' 
-                      : 'text-text-secondary hover:bg-gray-50'
-                  }`}
-                >
-                  <span className="text-xl">{item.icon}</span>
-                  <span className="font-medium">{item.label}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
+            </a>
+          ))}
         </nav>
 
+        {/* User Profile */}
         <div className="p-4 border-t border-gray-100">
-          <button className="w-full flex items-center space-x-3 px-4 py-3 text-text-secondary hover:bg-gray-50 rounded-lg transition-all">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span className="font-medium">Déconnexion</span>
-          </button>
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-white font-bold shadow-lg flex-shrink-0">
+              A
+            </div>
+            {sidebarOpen && (
+              <div className="animate-fade-in flex-1">
+                <p className="text-sm font-medium text-text-primary">Admin User</p>
+                <p className="text-xs text-text-secondary">admin@rawfinance.fr</p>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Toggle Button */}
+        <button 
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="absolute -right-3 top-20 w-6 h-6 bg-surface border border-gray-200 rounded-full flex items-center justify-center text-gray-400 hover:text-text-primary hover:bg-gray-50 transition-colors shadow-sm"
+        >
+          <svg className={`w-4 h-4 transition-transform ${sidebarOpen ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
       </aside>
 
-      {/* Mobile Sidebar */}
-      {sidebarOpen && (
-        <div className="lg:hidden fixed inset-0 z-20">
-          <aside className="fixed top-0 left-0 h-full w-64 bg-surface shadow-heavy">
-            <div className="p-6 border-b border-gray-100 pt-16">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold">R</span>
-                </div>
-                <span className="text-lg font-bold text-text-primary">RawFinance</span>
-              </div>
-            </div>
-            <nav className="p-4">
-              <ul className="space-y-2">
-                {menuItems.map((item) => (
-                  <li key={item.label}>
-                    <button
-                      onClick={() => {
-                        setActiveMenu(item.label);
-                        setSidebarOpen(false);
-                      }}
-                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                        item.label === activeMenu 
-                          ? 'bg-primary/10 text-primary' 
-                          : 'text-text-secondary hover:bg-gray-50'
-                      }`}
-                    >
-                      <span className="text-xl">{item.icon}</span>
-                      <span className="font-medium">{item.label}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100">
-              <button className="w-full flex items-center space-x-3 px-4 py-3 text-text-secondary hover:bg-gray-50 rounded-lg transition-all">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                <span className="font-medium">Déconnexion</span>
-              </button>
-            </div>
-          </aside>
-        </div>
-      )}
-
       {/* Main Content */}
-      <main className="lg:pl-64 pt-16 lg:pt-8 p-4 lg:p-8">
-        {/* Top Bar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-text-primary">Dashboard Administration</h1>
-            <p className="text-text-secondary text-sm mt-1">Vue d'ensemble des performances</p>
+      <main className={`flex-1 ${sidebarOpen ? 'ml-64' : 'ml-20'} transition-all duration-300`}>
+        {/* Header */}
+        <header className="bg-surface border-b border-gray-100 px-6 py-4 sticky top-0 z-10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold text-text-primary">Dashboard Administrateur</h1>
+              <p className="text-sm text-text-secondary">Vue d'ensemble de votre plateforme</p>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              {/* Search */}
+              <div className="relative hidden md:block">
+                <Input 
+                  placeholder="Rechercher..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-64 pl-10"
+                />
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+
+              {/* Notifications */}
+              <button className="relative p-2 text-gray-400 hover:text-text-primary hover:bg-gray-50 rounded-lg transition-colors">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {notificationCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-error text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
+                    {notificationCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Date & Time */}
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-medium text-text-primary">{currentTime.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+                <p className="text-xs text-text-secondary">{currentTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</p>
+              </div>
+
+              {/* Quick Actions */}
+              <Button variant="primary" className="hidden sm:flex items-center">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Nouvelle demande
+              </Button>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-            <div className="relative flex-1 sm:flex-none">
-              <Input
-                placeholder="Rechercher..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-full sm:w-48 lg:w-64"
-              />
-              <svg className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <button className="relative p-2 text-text-secondary hover:text-text-primary transition-colors">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              <span className="absolute top-1 right-1 w-2 h-2 bg-danger rounded-full"></span>
-            </button>
-            <div className="flex items-center space-x-3 ml-auto sm:ml-0">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                <span className="text-primary font-medium text-sm">AD</span>
-              </div>
-              <div className="hidden sm:block">
-                <p className="text-sm font-medium text-text-primary">Admin</p>
-                <p className="text-xs text-text-secondary">Super Admin</p>
-              </div>
-            </div>
+        </header>
+
+        {/* Dashboard Content */}
+        <div className="p-6 space-y-6">
+          {/* KPI Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { title: 'Total prêté', value: '2.4M€', change: '+12.5%', trend: 'up', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', color: 'primary' },
+              { title: 'Taux de remboursement', value: '94.2%', change: '+2.1%', trend: 'up', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', color: 'success' },
+              { title: 'Utilisateurs actifs', value: '1,247', change: '+8.3%', trend: 'up', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', color: 'info' },
+              { title: 'Crédits en cours', value: '328', change: '-3.2%', trend: 'down', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', color: 'warning' },
+            ].map((kpi, index) => (
+              <Card key={index} className="hover:shadow-lg hover:shadow-gray-100/50 transition-all duration-300 group">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-text-secondary">{kpi.title}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-text-primary mt-1">{kpi.value}</p>
+                    <div className="flex items-center mt-2">
+                      <span className={`text-xs font-medium flex items-center ${kpi.trend === 'up' ? 'text-success' : 'text-error'}`}>
+                        <svg className={`w-3 h-3 mr-1 ${kpi.trend === 'down' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                        </svg>
+                        {kpi.change}
+                      </span>
+                      <span className="text-xs text-gray-400 ml-1">vs mois dernier</span>
+                    </div>
+                  </div>
+                  <div className={`p-3 rounded-xl bg-${kpi.color}/10 group-hover:scale-110 transition-transform duration-300`}>
+                    <svg className={`w-6 h-6 text-${kpi.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={kpi.icon} />
+                    </svg>
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
-        </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
-          <Card className="bg-gradient-to-br from-primary to-primary-dark text-white">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-white/80 text-xs sm:text-sm">Total Prêté</p>
-                <p className="text-xl sm:text-3xl font-bold mt-1">32.5M CDF</p>
-                <p className="text-white/80 text-xs sm:text-sm mt-1 sm:mt-2">+12% ce mois</p>
+          {/* Charts Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Chart */}
+            <Card className="lg:col-span-2">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-text-primary">Évolution des crédits</h3>
+                  <p className="text-sm text-text-secondary">Credits accordés vs remboursements mensuels</p>
+                </div>
+                <div className="flex space-x-2">
+                  <button className="px-3 py-1 text-sm bg-primary/10 text-primary rounded-lg font-medium">2024</button>
+                  <button className="px-3 py-1 text-sm text-text-secondary hover:bg-gray-50 rounded-lg font-medium transition-colors">2023</button>
+                </div>
               </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-secondary to-secondary-dark text-white">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-white/80 text-xs sm:text-sm">Taux de Remboursement</p>
-                <p className="text-xl sm:text-3xl font-bold mt-1">94.2%</p>
-                <p className="text-white/80 text-xs sm:text-sm mt-1 sm:mt-2">+2.1% ce mois</p>
-              </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-accent to-accent-dark text-white sm:col-span-2 lg:col-span-1">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-white/80 text-xs sm:text-sm">Utilisateurs Actifs</p>
-                <p className="text-xl sm:text-3xl font-bold mt-1">8,547</p>
-                <p className="text-white/80 text-xs sm:text-sm mt-1 sm:mt-2">+156 cette semaine</p>
-              </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
-          {/* Bar Chart */}
-          <Card>
-            <CardHeader 
-              title="Montants des Crédits Accordés" 
-              subtitle="Répartition mensuelle (en CDF)"
-            />
-            <div className="h-48 sm:h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                  <XAxis dataKey="name" stroke="#718096" fontSize={12} />
-                  <YAxis stroke="#718096" fontSize={12} tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`} />
-                  <Tooltip
-                    formatter={(value: number | undefined) => [value ? formatCurrency(value) : '0', 'Montant']}
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #E2E8F0' }}
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={monthlyData}>
+                  <defs>
+                    <linearGradient id="colorCredits" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorRepayments" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="name" stroke="#9ca3af" fontSize={12} />
+                  <YAxis stroke="#9ca3af" fontSize={12} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#fff', 
+                      border: 'none', 
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 40px rgba(0,0,0,0.1)' 
+                    }}
                   />
-                  <Bar dataKey="amount" fill="#0066CC" radius={[4, 4, 0, 0]} />
-                </BarChart>
+                  <Area type="monotone" dataKey="credits" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorCredits)" />
+                  <Area type="monotone" dataKey="repayments" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRepayments)" />
+                </AreaChart>
               </ResponsiveContainer>
-            </div>
-          </Card>
+              <div className="flex justify-center space-x-6 mt-4">
+                <div className="flex items-center">
+                  <span className="w-3 h-3 bg-primary rounded-full mr-2" />
+                  <span className="text-sm text-text-secondary">Crédits accordés</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="w-3 h-3 bg-success rounded-full mr-2" />
+                  <span className="text-sm text-text-secondary">Remboursements</span>
+                </div>
+              </div>
+            </Card>
 
-          {/* Pie Chart */}
-          <Card>
-            <CardHeader 
-              title="Répartition par Type de Compte" 
-              subtitle="Particuliers vs Entrepreneurs"
-            />
-            <div className="h-48 sm:h-64">
-              <ResponsiveContainer width="100%" height="100%">
+            {/* Pie Chart */}
+            <Card>
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-text-primary">Répartition du portefeuille</h3>
+                <p className="text-sm text-text-secondary">Distribution par type de crédit</p>
+              </div>
+              <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie
-                    data={genderData}
+                    data={portfolioData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={40}
-                    outerRadius={70}
+                    innerRadius={50}
+                    outerRadius={80}
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {genderData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    {portfolioData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number | undefined) => [`${value || 0}%`, 'Pourcentage']} />
-                  <Legend verticalAlign="bottom" height={36} iconSize={8} wrapperStyle={{ fontSize: '12px' }} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#fff', 
+                      border: 'none', 
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 40px rgba(0,0,0,0.1)' 
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
-            </div>
-          </Card>
-        </div>
-
-        {/* User Management Table */}
-        <Card>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 lg:mb-6 gap-4">
-            <CardHeader 
-              title="Gestion des Utilisateurs" 
-              subtitle="Historique des crédits et statuts"
-            />
-            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="input py-2 px-3 text-sm flex-1 sm:flex-none"
-              >
-                <option value="all">Tous</option>
-                <option value="Particulier">Particuliers</option>
-                <option value="Entrepreneur">Entrepreneurs</option>
-              </select>
-              <Button variant="secondary" size="sm" className="flex-1 sm:flex-none">
-                <svg className="w-4 h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                <span className="hidden sm:inline">Exporter</span>
-              </Button>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <table className="w-full min-w-[600px]">
-              <thead>
-                <tr className="bg-surface-secondary">
-                  <th className="text-left py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-text-secondary">Identité</th>
-                  <th className="text-left py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-text-secondary hidden sm:table-cell">Type</th>
-                  <th className="text-left py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-text-secondary">Montant</th>
-                  <th className="text-left py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-text-secondary">Statut</th>
-                  <th className="text-left py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-text-secondary">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((user, index) => (
-                  <tr 
-                    key={user.id} 
-                    className={`${index % 2 === 0 ? 'bg-surface' : 'bg-surface-secondary/50'} hover:bg-gray-50 transition-colors`}
-                  >
-                    <td className="py-3 px-3 sm:px-4">
-                      <div>
-                        <p className="font-medium text-text-primary text-sm">{user.name}</p>
-                        <p className="text-xs text-text-secondary sm:hidden">{user.type}</p>
-                        <p className="text-xs text-text-secondary hidden sm:block">{user.phone}</p>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 sm:px-4 hidden sm:table-cell">
-                      <span className={`badge ${user.type === 'Entrepreneur' ? 'badge-info' : 'badge-primary/10 text-primary'}`}>
-                        {user.type}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 sm:px-4 font-medium text-sm">{formatCurrency(user.amount)}</td>
-                    <td className="py-3 px-3 sm:px-4">{getStatusBadge(user.status)}</td>
-                    <td className="py-3 px-3 sm:px-4">
-                      <div className="flex items-center space-x-1">
-                        <button className="p-1.5 sm:p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Voir dossier">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        </button>
-                        <button className="p-1.5 sm:p-2 text-text-secondary hover:text-primary hover:bg-gray-100 rounded-lg transition-colors" title="Contacter">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                          </svg>
-                        </button>
-                        <button className="p-1.5 sm:p-2 text-text-secondary hover:text-secondary hover:bg-secondary/10 rounded-lg transition-colors" title="Ajuster limite">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+              <div className="space-y-2 mt-4">
+                {portfolioData.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: item.color }} />
+                      <span className="text-sm text-text-secondary">{item.name}</span>
+                    </div>
+                    <span className="text-sm font-medium text-text-primary">{item.value}%</span>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </Card>
           </div>
 
-          {/* Pagination */}
-          <div className="flex flex-col sm:flex-row items-center justify-between mt-4 pt-4 border-t border-gray-100 gap-4">
-            <p className="text-xs sm:text-sm text-text-secondary">
-              <span className="font-medium">{filteredUsers.length}</span> sur <span className="font-medium">{mockUsers.length}</span> résultats
-            </p>
-            <div className="flex items-center space-x-2">
-              <Button variant="secondary" size="sm" disabled className="px-2 sm:px-3">
-                <span className="hidden sm:inline">Précédent</span>
-                <svg className="w-4 h-4 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </Button>
-              <button className="px-2 sm:px-3 py-1 bg-primary text-white rounded-lg text-xs sm:text-sm">1</button>
-              <Button variant="secondary" size="sm" className="px-2 sm:px-3">
-                <span className="hidden sm:inline">Suivant</span>
-                <svg className="w-4 h-4 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Button>
-            </div>
+          {/* Bottom Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Activity */}
+            <Card>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-text-primary">Activité récente</h3>
+                  <p className="text-sm text-text-secondary">Dernières actions sur la plateforme</p>
+                </div>
+                <button className="text-sm text-primary hover:text-primary-dark font-medium transition-colors">
+                  Voir tout
+                </button>
+              </div>
+              <div className="space-y-4">
+                {recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-center space-x-4 p-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      activity.type === 'success' ? 'bg-success/10' :
+                      activity.type === 'error' ? 'bg-error/10' :
+                      activity.type === 'warning' ? 'bg-warning/10' : 'bg-info/10'
+                    }`}>
+                      {activity.type === 'success' && (
+                        <svg className="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                      {activity.type === 'error' && (
+                        <svg className="w-5 h-5 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      )}
+                      {activity.type === 'warning' && (
+                        <svg className="w-5 h-5 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                      )}
+                      {activity.type === 'info' && (
+                        <svg className="w-5 h-5 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-text-primary truncate">{activity.user}</p>
+                      <p className="text-sm text-text-secondary">{activity.action}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-sm font-semibold text-text-primary">{activity.amount}</p>
+                      <p className="text-xs text-gray-400">{activity.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* Users Table */}
+            <Card>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-text-primary">Gestion des utilisateurs</h3>
+                  <p className="text-sm text-text-secondary">{filteredUsers.length} utilisateurs trouvés</p>
+                </div>
+                <div className="flex space-x-2">
+                  <Button variant="secondary" size="sm">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    Filtre
+                  </Button>
+                  <Button variant="secondary" size="sm">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Export
+                  </Button>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-100">
+                      <th className="text-left py-3 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider">Utilisateur</th>
+                      <th className="text-left py-3 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Statut</th>
+                      <th className="text-left py-3 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Crédit</th>
+                      <th className="text-left py-3 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Score</th>
+                      <th className="text-right py-3 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {filteredUsers.map((user) => (
+                      <tr key={user.id} className="hover:bg-gray-50 transition-colors group">
+                        <td className="py-3 px-2">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center text-xs font-semibold text-gray-600">
+                              {user.name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-text-primary truncate">{user.name}</p>
+                              <p className="text-xs text-text-secondary truncate hidden sm:block">{user.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 px-2 hidden md:table-cell">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(user.status)}`}>
+                            {user.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 hidden lg:table-cell">
+                          <span className="text-sm font-medium text-text-primary">{user.credit}</span>
+                        </td>
+                        <td className="py-3 px-2 hidden sm:table-cell">
+                          <div className="flex items-center space-x-2">
+                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden w-16">
+                              <div 
+                                className={`h-full rounded-full ${
+                                  user.score >= 80 ? 'bg-success' :
+                                  user.score >= 60 ? 'bg-warning' : 'bg-error'
+                                }`}
+                                style={{ width: `${user.score}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-medium text-text-secondary">{user.score}</span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-2 text-right">
+                          <div className="flex items-center justify-end space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button className="p-1.5 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                            </button>
+                            <button className="p-1.5 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                <p className="text-sm text-text-secondary">
+                  Affichage de <span className="font-medium">{filteredUsers.length}</span> sur <span className="font-medium">{users.length}</span> utilisateurs
+                </p>
+                <div className="flex space-x-1">
+                  <button className="px-3 py-1 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-text-secondary">Précédent</button>
+                  <button className="px-3 py-1 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-text-secondary">Suivant</button>
+                </div>
+              </div>
+            </Card>
           </div>
-        </Card>
+        </div>
       </main>
     </div>
   );
