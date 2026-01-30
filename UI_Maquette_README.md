@@ -206,7 +206,7 @@
 Utilisation de graphiques pour une lecture rapide des données :
 
 * **Histogramme des montants** : Répartition des crédits accordés par tranches de montants.
-* **Répartition par Genre** : Diagramme circulaire ou barre (Homme / Femme / Autre).
+* **Répartition par Type de Compte** : Diagramme circulaire ou barre (Particuliers / Entrepreneurs).
 * **Type de clients** : Comparatif visuel entre **Particuliers** et **Entrepreneurs**.
 * **Indicateurs clés (KPIs)** : Total prêté, Taux de remboursement, Nombre d'utilisateurs actifs.
 
@@ -251,7 +251,7 @@ Tableau détaillé permettant de consulter le profil complet de chaque personne 
 ---------------------------------------------------
 [Stats: Total Prêté | Taux Remboursement | Users]
 ---------------------------------------------------
-[Graphiques: Histogramme Montants | Pie Chart Genres]
+[Graphiques: Histogramme Montants | Pie Chart Types de Compte]
 ---------------------------------------------------
 [Tableau Historique:
  Nom       | Type    | Prêt    | Date Prêt | Prochaine Échéance | Statut

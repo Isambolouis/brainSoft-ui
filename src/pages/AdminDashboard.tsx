@@ -27,9 +27,8 @@ const monthlyData = [
 ];
 
 const genderData = [
-  { name: 'Hommes', value: 62 },
-  { name: 'Femmes', value: 35 },
-  { name: 'Autre', value: 3 },
+  { name: 'Particuliers', value: 65 },
+  { name: 'Entrepreneurs', value: 35 },
 ];
 
 const COLORS = ['#0066CC', '#00B8A9', '#FFB81C'];
@@ -120,14 +119,9 @@ export function AdminDashboard() {
         />
       )}
 
-      {/* Sidebar */}
-      <aside className={`
-        fixed top-0 left-0 h-full w-64 bg-surface shadow-heavy z-30
-        transform transition-transform duration-300 ease-in-out
-        lg:translate-x-0 lg:static lg:h-screen
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
-        <div className="p-6 border-b border-gray-100 pt-16 lg:pt-6">
+      {/* Desktop Fixed Sidebar */}
+      <aside className="hidden lg:flex flex-col w-64 bg-surface shadow-heavy fixed top-0 left-0 h-screen z-10">
+        <div className="p-6 border-b border-gray-100 pt-6">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
               <span className="text-white font-bold">R</span>
@@ -136,15 +130,12 @@ export function AdminDashboard() {
           </div>
         </div>
         
-        <nav className="p-4">
+        <nav className="p-4 flex-1 overflow-y-auto">
           <ul className="space-y-2">
             {menuItems.map((item) => (
               <li key={item.label}>
                 <button
-                  onClick={() => {
-                    setActiveMenu(item.label);
-                    setSidebarOpen(false);
-                  }}
+                  onClick={() => setActiveMenu(item.label)}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                     item.label === activeMenu 
                       ? 'bg-primary/10 text-primary' 
@@ -159,7 +150,7 @@ export function AdminDashboard() {
           </ul>
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100">
+        <div className="p-4 border-t border-gray-100">
           <button className="w-full flex items-center space-x-3 px-4 py-3 text-text-secondary hover:bg-gray-50 rounded-lg transition-all">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -169,8 +160,54 @@ export function AdminDashboard() {
         </div>
       </aside>
 
+      {/* Mobile Sidebar */}
+      {sidebarOpen && (
+        <div className="lg:hidden fixed inset-0 z-20">
+          <aside className="fixed top-0 left-0 h-full w-64 bg-surface shadow-heavy">
+            <div className="p-6 border-b border-gray-100 pt-16">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold">R</span>
+                </div>
+                <span className="text-lg font-bold text-text-primary">RawFinance</span>
+              </div>
+            </div>
+            <nav className="p-4">
+              <ul className="space-y-2">
+                {menuItems.map((item) => (
+                  <li key={item.label}>
+                    <button
+                      onClick={() => {
+                        setActiveMenu(item.label);
+                        setSidebarOpen(false);
+                      }}
+                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                        item.label === activeMenu 
+                          ? 'bg-primary/10 text-primary' 
+                          : 'text-text-secondary hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="text-xl">{item.icon}</span>
+                      <span className="font-medium">{item.label}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100">
+              <button className="w-full flex items-center space-x-3 px-4 py-3 text-text-secondary hover:bg-gray-50 rounded-lg transition-all">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span className="font-medium">Déconnexion</span>
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
+
       {/* Main Content */}
-      <main className="lg:ml-64 pt-16 lg:pt-8 p-4 lg:p-8">
+      <main className="lg:pl-64 pt-16 lg:pt-8 p-4 lg:p-8">
         {/* Top Bar */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div>
@@ -282,8 +319,8 @@ export function AdminDashboard() {
           {/* Pie Chart */}
           <Card>
             <CardHeader 
-              title="Répartition par Genre" 
-              subtitle="Distribution des utilisateurs"
+              title="Répartition par Type de Compte" 
+              subtitle="Particuliers vs Entrepreneurs"
             />
             <div className="h-48 sm:h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -342,7 +379,7 @@ export function AdminDashboard() {
                   <th className="text-left py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-text-secondary">Identité</th>
                   <th className="text-left py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-text-secondary hidden sm:table-cell">Type</th>
                   <th className="text-left py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-text-secondary">Montant</th>
-                  <th className="text-left py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-text-secondary hidden md:table-cell">Statut</th>
+                  <th className="text-left py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-text-secondary">Statut</th>
                   <th className="text-left py-3 px-3 sm:px-4 text-xs sm:text-sm font-semibold text-text-secondary">Actions</th>
                 </tr>
               </thead>
@@ -365,7 +402,7 @@ export function AdminDashboard() {
                       </span>
                     </td>
                     <td className="py-3 px-3 sm:px-4 font-medium text-sm">{formatCurrency(user.amount)}</td>
-                    <td className="py-3 px-3 sm:px-4 hidden md:table-cell">{getStatusBadge(user.status)}</td>
+                    <td className="py-3 px-3 sm:px-4">{getStatusBadge(user.status)}</td>
                     <td className="py-3 px-3 sm:px-4">
                       <div className="flex items-center space-x-1">
                         <button className="p-1.5 sm:p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Voir dossier">
