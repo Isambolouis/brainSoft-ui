@@ -30,7 +30,8 @@ export function CreditRequestPage() {
   const [isApproved, setIsApproved] = useState(false);
 
   // Calculate credit details based on user profile
-  const maxAmount = user?.creditLimit || 250000;
+  const minAmount = 10000; // Minimum based on user score (from backend)
+  const maxAmount = user?.creditLimit || 250000; // Maximum based on user score (from backend)
   const interestRate = 2.5;
   
   const calculateMonthlyPayment = () => {
@@ -89,18 +90,23 @@ export function CreditRequestPage() {
               <Input
                 label="Montant du crédit"
                 type="number"
-                placeholder="Entrez le montant"
-                value={formData.amount}
+                placeholder={`Entrez un montant entre ${minAmount.toLocaleString()} et ${maxAmount.toLocaleString()} CDF`}
+                value={formData.amount || ''}
                 onChange={(e) => {
                   const value = parseInt(e.target.value) || 0;
-                  // Clamp value between min and max
-                  const clampedValue = Math.max(10000, Math.min(value, maxAmount));
+                  setFormData({ ...formData, amount: value });
+                }}
+                onBlur={() => {
+                  // Validate and clamp the amount when user leaves the field
+                  const clampedValue = Math.max(minAmount, Math.min(formData.amount || 0, maxAmount));
                   setFormData({ ...formData, amount: clampedValue });
                 }}
-                helperText={`Montant entre 10,000 et ${maxAmount.toLocaleString()} CDF`}
+                error={formData.amount < minAmount ? `Le montant minimum est ${minAmount.toLocaleString()} CDF` : formData.amount > maxAmount ? `Le montant maximum est ${maxAmount.toLocaleString()} CDF` : undefined}
+                helperText={`Montant entre ${minAmount.toLocaleString()} et ${maxAmount.toLocaleString()} CDF`}
               />
-              <div className="flex justify-end mt-2 text-sm text-text-secondary">
-                <span>Maximum disponible: {maxAmount.toLocaleString()} CDF</span>
+              <div className="flex justify-between mt-2 text-sm text-text-secondary">
+                <span>Min: {minAmount.toLocaleString()} CDF</span>
+                <span>Max: {maxAmount.toLocaleString()} CDF</span>
               </div>
             </div>
 
