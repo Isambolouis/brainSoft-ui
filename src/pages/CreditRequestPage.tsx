@@ -84,26 +84,23 @@ export function CreditRequestPage() {
               </p>
             </div>
 
-            {/* Amount Slider */}
+            {/* Amount Input */}
             <div>
-              <div className="flex justify-between mb-4">
-                <span className="text-text-secondary">Montant du crédit</span>
-                <span className="text-2xl font-bold text-primary">
-                  {formData.amount.toLocaleString()} CDF
-                </span>
-              </div>
-              <input
-                type="range"
-                min="10000"
-                max={maxAmount}
-                step="10000"
+              <Input
+                label="Montant du crédit"
+                type="number"
+                placeholder="Entrez le montant"
                 value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: parseInt(e.target.value) })}
-                className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 0;
+                  // Clamp value between min and max
+                  const clampedValue = Math.max(10000, Math.min(value, maxAmount));
+                  setFormData({ ...formData, amount: clampedValue });
+                }}
+                helperText={`Montant entre 10,000 et ${maxAmount.toLocaleString()} CDF`}
               />
-              <div className="flex justify-between mt-2 text-sm text-text-secondary">
-                <span>10K</span>
-                <span>{maxAmount.toLocaleString()}</span>
+              <div className="flex justify-end mt-2 text-sm text-text-secondary">
+                <span>Maximum disponible: {maxAmount.toLocaleString()} CDF</span>
               </div>
             </div>
 
