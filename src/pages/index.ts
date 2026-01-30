@@ -1,5 +1,7 @@
 export { LandingPage } from './LandingPage';
 export { SignupPage } from './SignupPage';
+export { LoginPage } from './LoginPage';
+export { AdminDashboard } from './AdminDashboard';
 export { DashboardParticulier } from './DashboardParticulier';
 export { DashboardEntrepreneur } from './DashboardEntrepreneur';
 export { CreditRequestPage } from './CreditRequestPage';

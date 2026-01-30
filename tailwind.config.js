@@ -16,6 +16,7 @@ export default {
         },
         accent: {
           DEFAULT: '#FFB81C',
+          dark: '#E5A612',
         },
         text: {
           primary: '#1A202C',

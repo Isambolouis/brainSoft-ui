@@ -35,9 +35,9 @@ export function LandingPage() {
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
-                <Link to="/about">
+                <Link to="/login">
                   <Button variant="secondary" size="lg" fullWidth>
-                    En savoir plus
+                    Connexion
                   </Button>
                 </Link>
               </div>

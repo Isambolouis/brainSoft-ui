@@ -6,6 +6,8 @@ import { Footer } from './components/Footer';
 import {
   LandingPage,
   SignupPage,
+  LoginPage,
+  AdminDashboard,
   DashboardParticulier,
   DashboardEntrepreneur,
   CreditRequestPage,
@@ -50,6 +52,16 @@ function AppRoutes() {
         <>
           <SignupPage />
         </>
+      } />
+      
+      <Route path="/login" element={
+        <>
+          <LoginPage />
+        </>
+      } />
+      
+      <Route path="/admin" element={
+        <AdminDashboard />
       } />
       
       <Route path="/about" element={
