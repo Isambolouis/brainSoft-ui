@@ -28,11 +28,18 @@ export function CreditRequestPage() {
     purposeOther: '',
   });
   const [isApproved, setIsApproved] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [pin, setPin] = useState(['', '', '', '']);
 
   // Calculate credit details based on user profile
   const minAmount = 10000; // Minimum based on user score (from backend)
   const maxAmount = user?.creditLimit || 250000; // Maximum based on user score (from backend)
   const interestRate = 2.5;
+  
+  // Validation functions
+  const isAmountValid = formData.amount >= minAmount && formData.amount <= maxAmount;
+  const isPurposeValid = formData.purpose !== '';
+  const isReviewValid = termsAccepted && pin.join('').length === 4;
   
   const calculateMonthlyPayment = () => {
     const principal = formData.amount;
@@ -246,7 +253,12 @@ export function CreditRequestPage() {
             </Card>
 
             <label className="flex items-start space-x-3 cursor-pointer">
-              <input type="checkbox" className="mt-1 w-4 h-4 text-primary rounded border-gray-300" />
+              <input 
+                type="checkbox" 
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-1 w-4 h-4 text-primary rounded border-gray-300" 
+              />
               <span className="text-sm text-text-secondary">
                 J'accepte les conditions générales de prêt et m'engage à rembourser selon les échéances prévues
               </span>
@@ -256,16 +268,32 @@ export function CreditRequestPage() {
             <div>
               <label className="label">Entrez votre code PIN pour signer</label>
               <div className="flex space-x-2">
-                {[1, 2, 3, 4].map((i) => (
+                {pin.map((digit, index) => (
                   <input
-                    key={i}
+                    key={index}
                     type="password"
                     maxLength={1}
+                    value={digit}
+                    onChange={(e) => {
+                      const newPin = [...pin];
+                      newPin[index] = e.target.value;
+                      setPin(newPin);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Backspace' && !digit && index > 0) {
+                        const newPin = [...pin];
+                        newPin[index - 1] = '';
+                        setPin(newPin);
+                      }
+                    }}
                     className="w-14 h-14 text-center text-2xl font-bold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="•"
                   />
                 ))}
               </div>
+              {!isReviewValid && pin.join('').length > 0 && pin.join('').length < 4 && (
+                <p className="mt-1 text-sm text-danger">Le PIN doit contenir 4 chiffres</p>
+              )}
             </div>
           </div>
         );
@@ -405,16 +433,16 @@ export function CreditRequestPage() {
                 </Button>
               )}
               {currentStep === 'purpose' ? (
-                <Button onClick={() => setCurrentStep('review')} fullWidth>
+                <Button onClick={() => setCurrentStep('review')} fullWidth disabled={!isPurposeValid}>
                   Suivant
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               ) : currentStep === 'review' ? (
-                <Button onClick={handleSubmit} fullWidth>
+                <Button onClick={handleSubmit} fullWidth disabled={!isReviewValid}>
                   Soumettre ma demande
                 </Button>
               ) : (
-                <Button onClick={() => setCurrentStep('purpose')} fullWidth>
+                <Button onClick={() => setCurrentStep('purpose')} fullWidth disabled={!isAmountValid}>
                   Suivant
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
