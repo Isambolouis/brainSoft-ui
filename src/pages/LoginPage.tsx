@@ -1,17 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Card } from '../components/Card';
+import { useUser } from '../context/UserContext';
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const { login: loginUser, updateUser } = useUser();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -46,21 +49,146 @@ export function LoginPage() {
     if (!validateForm()) return;
     
     setIsLoading(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Temporary admin detection
-    if (formData.email === 'admin@gmail.com' && formData.password === 'admin123') {
+    setSubmitError(null);
+
+    try {
+      const loginData = {
+        email: formData.email,
+        password: formData.password,
+      };
+
+      const apiUrl = 'https://rawbank.onrender.com/api/auth/login';
+
+      // Afficher l'URL et les données envoyées dans la console
+      console.log('=== CONNEXION - ENVOI DE LA REQUÊTE ===');
+      console.log('URL:', apiUrl);
+      console.log('Données envoyées:', loginData);
+
+      // Envoyer la requête POST à l'API
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(loginData),
+      });
+
+      const data = await response.json();
+
+      console.log('=== RÉPONSE DU SERVEUR ===');
+      console.log('Réponse complète:', data);
+
+      if (response.ok && data.ok) {
+        // Succès - extraire les données utilisateur
+        const userData = data.user;
+        const session = data.session;
+
+        console.log('Profil utilisateur (login):', userData.profil);
+        console.log('Token:', session?.access_token);
+
+        // Stocker le token dans localStorage
+        if (session?.access_token) {
+          localStorage.setItem('rawfinance_access_token', session.access_token);
+          localStorage.setItem('rawfinance_refresh_token', session.refresh_token);
+        }
+
+        // Récupérer le profil complet de l'utilisateur
+        try {
+          const profileUrl = `https://rawbank.onrender.com/api/users/${userData.id}`;
+          console.log('=== RÉCUPÉRATION DU PROFIL ===');
+          console.log('URL:', profileUrl);
+          console.log('User ID:', userData.id);
+
+          const profileResponse = await fetch(profileUrl, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.access_token}`,
+            },
+          });
+
+          const profileData = await profileResponse.json();
+          console.log('=== RÉPONSE DU PROFIL ===');
+          console.log('Réponse complète:', profileData);
+
+          if (profileResponse.ok && profileData.ok) {
+            const userProfile = profileData.user;
+            
+            console.log('Informations utilisateur:');
+            console.log('- ID:', userProfile.id);
+            console.log('- Email:', userProfile.email);
+            console.log('- Téléphone:', userProfile.numero_telephone);
+            console.log('- Prénom:', userProfile.profil?.prenom);
+            console.log('- Nom:', userProfile.profil?.nom);
+            console.log('- Type profil:', userProfile.profil?.type_profil);
+            console.log('- Comptes Mobile Money:', userProfile.comptes_mobile_money);
+            console.log('- Détails entrepreneur:', userProfile.details_entrepreneur);
+
+            // Mettre à jour le contexte utilisateur avec le profil complet
+            loginUser(userProfile.numero_telephone);
+            updateUser({
+              id: userProfile.id,
+              email: userProfile.email,
+              phone: userProfile.numero_telephone,
+              firstName: userProfile.profil?.prenom || '',
+              lastName: userProfile.profil?.nom || '',
+              type: userProfile.profil?.type_profil || null,
+            });
+
+            // Afficher un message de succès avec les informations
+            alert(`Bienvenue ${userProfile.profil?.prenom} ${userProfile.profil?.nom}!\n\nEmail: ${userProfile.email}\nTéléphone: ${userProfile.numero_telephone}\nType: ${userProfile.profil?.type_profil}\n\nVoir la console pour plus de détails.`);
+          } else {
+            console.error('Erreur lors de la récupération du profil:', profileData);
+            // Utiliser les données du login en cas d'échec
+            loginUser(userData.numero_telephone);
+            updateUser({
+              id: userData.id,
+              email: userData.email,
+              phone: userData.numero_telephone,
+              firstName: userData.profil?.prenom || '',
+              lastName: userData.profil?.nom || '',
+              type: userData.profil?.type_profil || null,
+            });
+          }
+        } catch (error) {
+          console.error('Erreur lors de la récupération du profil:', error);
+          // Utiliser les données du login en cas d'erreur
+          loginUser(userData.numero_telephone);
+          updateUser({
+            id: userData.id,
+            email: userData.email,
+            phone: userData.numero_telephone,
+            firstName: userData.profil?.prenom || '',
+            lastName: userData.profil?.nom || '',
+            type: userData.profil?.type_profil || null,
+          });
+        }
+
+        // Afficher succès
+        setIsSuccess(true);
+
+        // Rediriger selon le type de profil
+        setTimeout(() => {
+          if (userData.email === 'admin@gmail.com') {
+            navigate('/admin');
+          } else {
+            navigate('/dashboard');
+          }
+        }, 800);
+
+      } else {
+        // Erreur du serveur
+        setSubmitError(data.message || 'Email ou mot de passe incorrect');
+        console.error('Erreur serveur:', data);
+        setIsLoading(false);
+      }
+    } catch (error) {
+      // Erreur réseau ou autre
+      const errorMessage = error instanceof Error ? error.message : 'Erreur de connexion au serveur';
+      setSubmitError(errorMessage);
+      console.error('Erreur lors de la connexion:', error);
       setIsLoading(false);
-      setIsSuccess(true);
-      setTimeout(() => navigate('/admin'), 800);
-      return;
     }
-    
-    setIsLoading(false);
-    setIsSuccess(true);
-    setTimeout(() => navigate('/dashboard'), 800);
   };
 
   const features = [
@@ -116,6 +244,12 @@ export function LoginPage() {
                 <h1 className="text-xl sm:text-2xl font-bold text-text-primary">Bienvenue !</h1>
                 <p className="text-text-secondary mt-1">Connectez-vous pour accéder à votre espace</p>
               </div>
+
+              {submitError && (
+                <div className="mb-4 p-3 bg-danger/10 border border-danger rounded-lg text-danger text-sm">
+                  {submitError}
+                </div>
+              )}
               
               <form onSubmit={handleSubmit} className="space-y-5">
                 <Input

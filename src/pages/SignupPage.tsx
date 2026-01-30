@@ -8,7 +8,8 @@ import {
   Building, 
   MapPin, 
   CheckCircle,
-  Camera
+  Camera,
+  Lock
 } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -16,16 +17,6 @@ import { Input, Select } from '../components/Input';
 import { useUser } from '../context/UserContext';
 
 type Step = 'phone' | 'identification' | 'profile' | 'mobile-money' | 'confirmation';
-
-interface ImportMetaEnv {
-  readonly VITE_API_URL: string;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 export function SignupPage() {
   const navigate = useNavigate();
@@ -38,6 +29,8 @@ export function SignupPage() {
   const [formData, setFormData] = useState({
     phone: '',
     email: '',
+    password: '',
+    confirmPassword: '',
     firstName: '',
     lastName: '',
     profileType: searchParams.get('type') || 'particulier',
@@ -62,8 +55,14 @@ export function SignupPage() {
     switch (step) {
       case 'phone':
         if (!formData.phone) newErrors.phone = 'Le numéro de téléphone est requis';
-        else if (!/^\+243[0-9]{9}$/.test(formData.phone)) {
-          newErrors.phone = 'Format: +243xxxxxxxxx';
+        else {
+          // Accepter n'importe quel numéro avec au moins 10 chiffres
+          const phoneWithoutSpaces = formData.phone.replace(/\s+/g, '');
+          const digitsOnly = phoneWithoutSpaces.replace(/^\+/, ''); // Enlever le + au début
+          
+          if (!/^[0-9]{10,}$/.test(digitsOnly)) {
+            newErrors.phone = 'Minimum 10 chiffres requis';
+          }
         }
         if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
           newErrors.email = 'Email invalide';
@@ -72,6 +71,13 @@ export function SignupPage() {
       case 'identification':
         if (!formData.firstName) newErrors.firstName = 'Le prénom est requis';
         if (!formData.lastName) newErrors.lastName = 'Le nom est requis';
+        if (!formData.password) newErrors.password = 'Le mot de passe est requis';
+        else if (formData.password.length < 8) {
+          newErrors.password = 'Minimum 8 caractères';
+        }
+        if (formData.password !== formData.confirmPassword) {
+          newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
+        }
         break;
       case 'profile':
         if (formData.profileType === 'entrepreneur') {
@@ -109,15 +115,73 @@ export function SignupPage() {
     }
   };
 
-  const handleSubmit = () => {
-    login(formData.phone);
-    updateUser({
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      type: formData.profileType as 'particulier' | 'entrepreneur',
-    });
-    navigate('/dashboard');
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    setSubmitError(null);
+
+    try {
+      // Formater le numéro de téléphone - enlever seulement les espaces
+      const phoneNumber = formData.phone.replace(/\s+/g, '');
+
+      // Préparer les données pour l'API (format exact attendu par le serveur)
+      const registrationData = {
+        email: formData.email,
+        password: formData.password,
+        numero_telephone: phoneNumber,
+        prenom: formData.firstName,
+        nom: formData.lastName,
+        mobile_money_lie: formData.operator,
+      };
+
+      const apiUrl = 'https://rawbank.onrender.com/api/auth/register';
+
+      // Afficher l'URL et les données envoyées dans la console
+      console.log('=== ENVOI DE LA REQUÊTE ===');
+      console.log('URL:', apiUrl);
+      console.log('Données envoyées:', registrationData);
+      console.log('JSON:', JSON.stringify(registrationData, null, 2));
+
+      // Envoyer la requête POST à l'API
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(registrationData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Succès - afficher la réponse et rediriger
+        console.log('Réponse du serveur:', data);
+        alert(`Inscription réussie! ${JSON.stringify(data, null, 2)}`);
+        
+        // Mettre à jour le contexte utilisateur
+        login(formData.phone);
+        updateUser({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          type: formData.profileType as 'particulier' | 'entrepreneur',
+        });
+        
+        navigate('/dashboard');
+      } else {
+        // Erreur du serveur
+        setSubmitError(data.message || 'Erreur lors de l\'inscription');
+        console.error('Erreur serveur:', data);
+        alert(`Erreur: ${data.message || 'Une erreur est survenue'}`);
+      }
+    } catch (error) {
+      // Erreur réseau ou autre
+      const errorMessage = error instanceof Error ? error.message : 'Erreur de connexion au serveur';
+      setSubmitError(errorMessage);
+      console.error('Erreur lors de l\'inscription:', error);
+      alert(`Erreur de connexion: ${errorMessage}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderStep = () => {
@@ -135,11 +199,12 @@ export function SignupPage() {
             </div>
             <Input
               label="Numéro de téléphone"
-              placeholder="+243 81 234 5678"
+              placeholder="0812345678 ou +243812345678"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               leftIcon={<Phone className="w-5 h-5" />}
               error={errors.phone}
+              helperText="Minimum 10 chiffres"
             />
             <Input
               label="Email (optionnel)"
@@ -183,6 +248,26 @@ export function SignupPage() {
                 error={errors.lastName}
               />
             </div>
+            
+            <Input
+              label="Mot de passe"
+              type="password"
+              placeholder="Minimum 8 caractères"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              leftIcon={<Lock className="w-5 h-5" />}
+              error={errors.password}
+            />
+            
+            <Input
+              label="Confirmer le mot de passe"
+              type="password"
+              placeholder="Retapez votre mot de passe"
+              value={formData.confirmPassword}
+              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              leftIcon={<Lock className="w-5 h-5" />}
+              error={errors.confirmPassword}
+            />
             
             {/* CNI Upload Simulation */}
             <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-primary transition-colors cursor-pointer">
@@ -423,6 +508,11 @@ export function SignupPage() {
 
         {/* Form Card */}
         <Card className="animate-fade-in">
+          {submitError && (
+            <div className="mb-4 p-3 bg-danger/10 border border-danger rounded-lg text-danger text-sm">
+              {submitError}
+            </div>
+          )}
           {renderStep()}
           
           {/* Navigation Buttons */}
@@ -437,8 +527,8 @@ export function SignupPage() {
                 Suivant
               </Button>
             ) : (
-              <Button onClick={handleSubmit} fullWidth>
-                Créer mon compte
+              <Button onClick={handleSubmit} fullWidth isLoading={isLoading}>
+                {isLoading ? 'Inscription en cours...' : 'Créer mon compte'}
               </Button>
             )}
           </div>

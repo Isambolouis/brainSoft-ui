@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   User,
   Phone,
@@ -23,6 +23,13 @@ import { useUser } from '../context/UserContext';
 export function SettingsPage() {
   const { user, updateUser } = useUser();
   const [activeTab, setActiveTab] = useState('profile');
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [profileData, setProfileData] = useState({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    email: user?.email || '',
+  });
   const [notifications, setNotifications] = useState({
     sms: true,
     email: true,
@@ -39,11 +46,101 @@ export function SettingsPage() {
     { id: 'support', label: 'Support', icon: HelpCircle },
   ];
 
+  // Mettre à jour profileData quand user change
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+      });
+    }
+  }, [user]);
+
+  const handleSaveProfile = async () => {
+    if (!user?.id) {
+      setMessage({ type: 'error', text: 'Utilisateur non connecté' });
+      return;
+    }
+
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      // Récupérer le token depuis localStorage
+      const token = localStorage.getItem('rawfinance_access_token');
+
+      // Préparer les données modifiées
+      const updatedData = {
+        id: user.id,
+        prenom: profileData.firstName,
+        nom: profileData.lastName,
+        email: profileData.email,
+      };
+
+      const apiUrl = 'https://rawbank.onrender.com/api/users/';
+
+      console.log('=== MODIFICATION DU PROFIL ===');
+      console.log('URL:', apiUrl);
+      console.log('User ID:', user.id);
+      console.log('Données envoyées:', updatedData);
+
+      // Envoyer la requête POST
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      const data = await response.json();
+
+      console.log('=== RÉPONSE DU SERVEUR ===');
+      console.log('Réponse:', data);
+
+      if (response.ok && data.status === 'ok') {
+        // Succès - mettre à jour le contexte local
+        updateUser({
+          firstName: profileData.firstName,
+          lastName: profileData.lastName,
+          email: profileData.email,
+        });
+
+        setMessage({ type: 'success', text: 'Profil mis à jour avec succès!' });
+        console.log('✅ Profil mis à jour avec succès');
+      } else {
+        // Erreur
+        const errorMessage = data.message || 'Erreur lors de la mise à jour du profil';
+        setMessage({ type: 'error', text: errorMessage });
+        console.error('❌ Erreur:', data);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur de connexion au serveur';
+      setMessage({ type: 'error', text: errorMessage });
+      console.error('❌ Erreur lors de la mise à jour:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'profile':
         return (
           <div className="space-y-6">
+            {/* Success/Error Message */}
+            {message && (
+              <div className={`p-4 rounded-lg ${
+                message.type === 'success' 
+                  ? 'bg-success/10 border border-success text-success' 
+                  : 'bg-danger/10 border border-danger text-danger'
+              }`}>
+                {message.text}
+              </div>
+            )}
+
             {/* Profile Photo */}
             <div className="flex items-center space-x-4">
               <div className="relative">
@@ -67,14 +164,14 @@ export function SettingsPage() {
             <div className="grid md:grid-cols-2 gap-4">
               <Input
                 label="Prénom"
-                value={user?.firstName || ''}
-                onChange={(e) => updateUser({ firstName: e.target.value })}
+                value={profileData.firstName}
+                onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
                 leftIcon={<User className="w-5 h-5" />}
               />
               <Input
                 label="Nom"
-                value={user?.lastName || ''}
-                onChange={(e) => updateUser({ lastName: e.target.value })}
+                value={profileData.lastName}
+                onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
                 leftIcon={<User className="w-5 h-5" />}
               />
             </div>
@@ -82,7 +179,6 @@ export function SettingsPage() {
             <Input
               label="Téléphone"
               value={user?.phone || ''}
-              onChange={(e) => updateUser({ phone: e.target.value })}
               leftIcon={<Phone className="w-5 h-5" />}
               disabled
               helperText="Contactez le support pour modifier votre numéro"
@@ -91,13 +187,15 @@ export function SettingsPage() {
             <Input
               label="Email"
               type="email"
-              value={user?.email || ''}
-              onChange={(e) => updateUser({ email: e.target.value })}
+              value={profileData.email}
+              onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
               leftIcon={<Mail className="w-5 h-5" />}
             />
 
             <div className="pt-4 border-t border-gray-100">
-              <Button>Enregistrer les modifications</Button>
+              <Button onClick={handleSaveProfile} isLoading={isLoading}>
+                {isLoading ? 'Enregistrement...' : 'Enregistrer les modifications'}
+              </Button>
             </div>
           </div>
         );
